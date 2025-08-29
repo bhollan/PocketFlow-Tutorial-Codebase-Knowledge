@@ -26,66 +26,34 @@ cache_file = "llm_cache.json"
 
 
 def call_llm(prompt: str, use_cache: bool = True) -> str:
-    # Log the prompt
-    logger.info(f"PROMPT: {prompt}")
+    """
+    Calls an Ollama model to generate a text response.
 
-    # Check cache if enabled
-    if use_cache:
-        # Load cache from disk
-        cache = {}
-        if os.path.exists(cache_file):
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    cache = json.load(f)
-            except:
-                logger.warning(f"Failed to load cache, starting with empty cache")
-        # Return from cache if exists
-        if prompt in cache:
-            logger.info(f"RESPONSE: {cache[prompt]}")
-            return cache[prompt]
+    Args:
+        prompt (str): The prompt to send to the model.
+        use_cache (bool, optional): Whether to use Ollama's caching mechanism. Defaults to True.
 
-    # Call Ollama local model
+    Returns:
+        str: The generated text response from the model.
+    """
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": os.getenv("OLLAMA_MODEL", "smollm2"),
-                "stream":False,
-                "prompt": prompt,
-#                "messages": [{"role": "user", "content": prompt}]
-            },
-            timeout=60
+        response = ollama.chat(
+            model='gemma3:27b',  # deepcoder:14b  gemma3:12b  phi4:14b Replace with your desired Ollama model name
+            messages=[
+                {
+                    'role': 'user',
+                    'content': prompt,
+                },
+            ],
+            stream=False, # important to set stream to false to get the response.
+            options = {
+                'use_cache': use_cache,
+            }
+
         )
-        response.raise_for_status()
-        response_data = response.json()
-        response_text = response_data.get("response", "")
-#        response_text = response_data.get("message", {}).get("content", "")
-    except Exception as e:
-        logger.error(f"Ollama API call failed: {e}")
-        raise
-
-
-    # Update cache if enabled
-    if use_cache:
-        # Load cache again to avoid overwrites
-        cache = {}
-        if os.path.exists(cache_file):
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    cache = json.load(f)
-            except:
-                pass
-
-        # Add to cache and save
-        cache[prompt] = response_text
-        try:
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(cache, f)
-        except Exception as e:
-            logger.error(f"Failed to save cache: {e}")
-
-    return response_text
-
+        return response['message']['content']
+    except ollama.ResponseError as e:
+        print(f"Ollama Error: {e}")
 
 if __name__ == "__main__":
     test_prompt = "Hello, how are you?"

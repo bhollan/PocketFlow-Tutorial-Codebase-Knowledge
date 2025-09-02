@@ -47,19 +47,20 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
     # Call Ollama local model
     try:
         response = requests.post(
-            "http://localhost:11434/api/generate",
+            "http://localhost:11434/api/chat",
             json={
-                "model": os.getenv("OLLAMA_MODEL", "smollm2"),
+#                "model": os.getenv("OLLAMA_MODEL"),
+                "model": "qwen3:latest",
                 "stream":False,
-                "prompt": prompt,
-#                "messages": [{"role": "user", "content": prompt}]
+#                "prompt": prompt,
+                "messages": [{"role": "user", "content": prompt}]
             },
-            timeout=60
+            timeout=600
         )
         response.raise_for_status()
         response_data = response.json()
-        response_text = response_data.get("response", "")
-#        response_text = response_data.get("message", {}).get("content", "")
+#        response_text = response_data.get("response", "")
+        response_text = response_data.get("message", {}).get("content", "")
     except Exception as e:
         logger.error(f"Ollama API call failed: {e}")
         raise

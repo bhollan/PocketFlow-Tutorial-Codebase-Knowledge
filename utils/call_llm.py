@@ -40,17 +40,14 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
         response = requests.post(
             "http://localhost:11434/api/chat",
             json={
-#                "model": os.getenv("OLLAMA_MODEL"),
-                "model": "qwen3:latest",
+                "model": "gpt-oss:120b",
                 "stream":False,
-#                "prompt": prompt,
                 "messages": [{"role": "user", "content": prompt}]
             },
-            timeout=600
+            timeout=60
         )
         response.raise_for_status()
         response_data = response.json()
-#        response_text = response_data.get("response", "")
         response_text = response_data.get("message", {}).get("content", "")
     except Exception as e:
         logger.error(f"Ollama API call failed: {e}")

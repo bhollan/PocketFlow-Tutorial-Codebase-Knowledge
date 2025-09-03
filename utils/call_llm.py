@@ -26,25 +26,16 @@ cache_file = "llm_cache.json"
 
 
 def call_llm(prompt: str, use_cache: bool = True) -> str:
-    # Log the prompt
-    logger.info(f"PROMPT: {prompt}")
+    """
+    Calls an Ollama model to generate a text response.
 
-    # Check cache if enabled
-    if use_cache:
-        # Load cache from disk
-        cache = {}
-        if os.path.exists(cache_file):
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    cache = json.load(f)
-            except:
-                logger.warning(f"Failed to load cache, starting with empty cache")
-        # Return from cache if exists
-        if prompt in cache:
-            logger.info(f"RESPONSE: {cache[prompt]}")
-            return cache[prompt]
+    Args:
+        prompt (str): The prompt to send to the model.
+        use_cache (bool, optional): Whether to use Ollama's caching mechanism. Defaults to True.
 
-    # Call Ollama local model
+    Returns:
+        str: The generated text response from the model.
+    """
     try:
         response = requests.post(
             "http://localhost:11434/api/chat",
@@ -86,7 +77,6 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
             logger.error(f"Failed to save cache: {e}")
 
     return response_text
-
 
 if __name__ == "__main__":
     test_prompt = "Hello, how are you?"
